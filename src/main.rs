@@ -1,4 +1,5 @@
 use eframe::egui;
+use regex::Regex;
 
 // Goal: Password solver
 // Up to 4 characters as an input - filter through a list and pick the right matching word
@@ -46,6 +47,37 @@ impl eframe::App for PasswordSolverApp {
                     }
                 });
             ui.label(format!("Selected Password: {}{}{}{}", self.password_parts[0], self.password_parts[1], self.password_parts[2], self.password_parts[3]));
+
+            let password_matches = PasswordSolverApp::find_matching(self.password_parts, self.possible_codes.clone());
+            match password_matches {
+                None => {
+                    ui.label(format!("Please input at least 1 letter"));
+                }
+                Some(matches) => {
+                    if !matches.is_empty() {
+                        if matches.len() == 1 {
+                            ui.label(format!("Only Match: {}", matches.get(0).unwrap()));
+                        } else {
+                            // Show up to 50 matches
+                            let max_displayed = 50;
+                            let num_to_output = std::cmp::min(max_displayed, matches.len());
+                            let mut output: String = "".to_string();
+                            for i in 0..num_to_output {
+                                if output.len() > 0 {
+                                    output.push_str(", ");
+                                }
+                                output.push_str(matches.get(i).unwrap());
+                            }
+                            if max_displayed <= matches.len() {
+                                output.push_str(", ...");
+                            }
+                            ui.label(format!("Matches: {}", output));
+                        }
+                    } else {
+                        ui.label("No matches found.");
+                    }
+                }
+            }
         });
     }
 }
@@ -54,36 +86,59 @@ struct PasswordSolverApp {
     // Selected password characters
     password_parts: [char; 4],
     // Constant list of possible characters, includes '-' for unselected and the entire english alphabet
-    combo_box_options: [char; 27]
+    combo_box_options: [char; 27],
+    possible_codes: Vec<String>
 }
 
-impl Default for PasswordSolverApp {
-    fn default() -> Self {
+impl PasswordSolverApp {
+    pub fn new(codes: Vec<String>) -> Self {
         Self {
             password_parts: ['-', '-', '-', '-'],
-            combo_box_options: ['-', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+            combo_box_options: ['-', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'],
+            possible_codes: codes
         }
+    }
+
+    // Returns an empty option if no matching was performed (everything was a wildcard). Otherwise, returns a Vector of all matches
+    pub fn find_matching(password_parts: [char; 4], possible_codes: Vec<String>) -> Option<Vec<String>> {
+        // Build Regex from password parts, '-' maps to wildcard (.)
+        // Technically it should be [a-z] instead of '.', but it's fine
+        let mut parts: [char; 4] = ['a'; 4];
+        let mut wildcards: i32 = 0;
+        let mut i: usize = 0;
+        for password_char in password_parts {
+            if password_char == '-' {
+                parts[i] = '.';
+                wildcards += 1;
+            } else {
+                parts[i] = password_char;
+            }
+            i += 1;
+        }
+        if wildcards == 4 {
+            // There's no input, we have 4 wildcards, return None to indicate that
+            return None;
+        }
+        let regex = Regex::new(String::from_iter(parts).as_str()).unwrap();
+        let mut matches: Vec<String> = Vec::new();
+        for code in possible_codes {
+            if regex.find(code.as_str()).is_some() {
+                matches.push(code);
+            }
+        }
+        return Some(matches);
     }
 }
 
-pub fn filled_triangle(
-    ui: &egui::Ui,
-    rect: egui::Rect,
-    visuals: &egui::style::WidgetVisuals,
-    _is_open: bool,
-) {
-    let rect = egui::Rect::from_center_size(
-        rect.center(),
-        egui::vec2(rect.width() * 0.6, rect.height() * 0.4),
-    );
-    ui.painter().add(egui::Shape::convex_polygon(
-        vec![rect.left_top(), rect.right_top(), rect.center_bottom()],
-        visuals.fg_stroke.color,
-        visuals.fg_stroke,
-    ));
-}
-
 fn main() -> eframe::Result {
+    let mut possible_codes: Vec<String> = Vec::new();
+    // Read in codes
+    let all_codes = include_str!("../codes.txt");
+    for code in all_codes.lines() {
+        possible_codes.push(code.to_string());
+    }
+
+    // Create window
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default().with_inner_size([1920.0, 1080.0]),
         ..Default::default()
@@ -92,7 +147,7 @@ fn main() -> eframe::Result {
         "GTFO Password Solver",
         options,
         Box::new(|_cc| {
-            Ok(Box::<PasswordSolverApp>::default())
+            Ok(Box::<PasswordSolverApp>::new(PasswordSolverApp::new(possible_codes)))
         }),
     )
 }
