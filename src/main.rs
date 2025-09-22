@@ -1,4 +1,5 @@
 use eframe::egui;
+use egui::Vec2;
 use regex::Regex;
 
 // Goal: Password solver
@@ -10,10 +11,13 @@ impl eframe::App for PasswordSolverApp {
             // Center align heading
             ui.vertical_centered(|ui| ui.heading("GTFO Password Solver"));
             // TODO: Shift downwards a bit
+            ui.separator();
             ui.vertical_centered(|ui| ui.heading("Inputs"));
-            // TODO, possibly change the size of the selection box & center these
-            // Width does properly change the width, height does not appear to work
+
+            // TODO, center combo boxes on 1 row
             // TODO: allow keyboard inputs to pick the character
+            // Adjust interactable shape of combo box
+            ui.spacing_mut().interact_size = Vec2::new(100.0, 100.0);
             egui::ComboBox::from_label("Character 1")
                 .selected_text(format!("{}", self.password_parts[0]))
                 .show_ui(ui, |ui| {
