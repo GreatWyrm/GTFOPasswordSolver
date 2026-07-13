@@ -24,75 +24,98 @@ impl eframe::App for PasswordSolverApp<'_> {
             // TODO, center combo boxes on 1 row
             // TODO: allow keyboard inputs to pick the character
             // Adjust interactable shape of combo box
-            ui.spacing_mut().interact_size = Vec2::new(100.0, 100.0);
-            egui::ComboBox::from_label("Character 1")
-                .selected_text(format!("{}", self.password_parts[0]))
-                .show_ui(ui, |ui| {
-                    for character in COMBO_BOX_OPTIONS {
-                        ui.selectable_value(
-                            &mut self.password_parts[0],
-                            character,
-                            String::from(character),
-                        );
-                    }
+            ui.columns_const(|[col_1, col_2, col_3, col_4]| {
+                col_1.vertical_centered(|ui| {
+                    ui.spacing_mut().interact_size = Vec2::new(100.0, 100.0);
+                    egui::ComboBox::from_label("Character 1")
+                        .selected_text(format!("{}", self.password_parts[0]))
+                        .show_ui(ui, |ui| {
+                            for character in COMBO_BOX_OPTIONS {
+                                ui.selectable_value(
+                                &mut self.password_parts[0],
+                                character,
+                                String::from(character),
+                            );
+                        }
+                    });
                 });
-            egui::ComboBox::from_label("Character 2")
-                .selected_text(format!("{}", self.password_parts[1]))
-                .show_ui(ui, |ui| {
-                    for character in COMBO_BOX_OPTIONS {
-                        ui.selectable_value(
-                            &mut self.password_parts[1],
-                            character,
-                            String::from(character),
-                        );
-                    }
+                col_2.vertical_centered(|ui| {
+                    ui.spacing_mut().interact_size = Vec2::new(100.0, 100.0);
+                    egui::ComboBox::from_label("Character 2")
+                        .selected_text(format!("{}", self.password_parts[1]))
+                        .show_ui(ui, |ui| {
+                            for character in COMBO_BOX_OPTIONS {
+                                ui.selectable_value(
+                                &mut self.password_parts[1],
+                                character,
+                                String::from(character),
+                            );
+                        }
+                    });
                 });
-            egui::ComboBox::from_label("Character 3")
-                .selected_text(format!("{}", self.password_parts[2]))
-                .show_ui(ui, |ui| {
-                    for character in COMBO_BOX_OPTIONS {
-                        ui.selectable_value(
-                            &mut self.password_parts[2],
-                            character,
-                            String::from(character),
-                        );
-                    }
+                col_3.vertical_centered(|ui| {
+                    ui.spacing_mut().interact_size = Vec2::new(100.0, 100.0);
+                    egui::ComboBox::from_label("Character 3")
+                        .selected_text(format!("{}", self.password_parts[2]))
+                        .show_ui(ui, |ui| {
+                            for character in COMBO_BOX_OPTIONS {
+                                ui.selectable_value(
+                                &mut self.password_parts[2],
+                                character,
+                                String::from(character),
+                            );
+                        }
+                    });
                 });
-            egui::ComboBox::from_label("Character 4")
-                .selected_text(format!("{}", self.password_parts[3]))
-                .show_ui(ui, |ui| {
-                    for character in COMBO_BOX_OPTIONS {
-                        ui.selectable_value(
-                            &mut self.password_parts[3],
-                            character,
-                            String::from(character),
-                        );
-                    }
+                col_4.vertical_centered(|ui| {
+                    ui.spacing_mut().interact_size = Vec2::new(100.0, 100.0);
+                    egui::ComboBox::from_label("Character 4")
+                        .selected_text(format!("{}", self.password_parts[3]))
+                        .show_ui(ui, |ui| {
+                            for character in COMBO_BOX_OPTIONS {
+                                ui.selectable_value(
+                                &mut self.password_parts[3],
+                                character,
+                                String::from(character),
+                            );
+                        }
+                    });
                 });
-            ui.label(format!(
-                "Selected Password: {}{}{}{}",
-                self.password_parts[0],
-                self.password_parts[1],
-                self.password_parts[2],
-                self.password_parts[3]
-            ));
-
+            });
+            ui.add_space(30.0);
+            ui.vertical_centered_justified(|ui| {
+                ui.label(format!(
+                    "Selected Password: {}{}{}{}",
+                    self.password_parts[0],
+                    self.password_parts[1],
+                    self.password_parts[2],
+                    self.password_parts[3]
+                ));
+            });
+            ui.add_space(100.0);
             let password_matches = self.find_matching();
             match password_matches {
-                None => ui.label("Please input at least 1 letter"),
+                 None => {
+                    ui.vertical_centered_justified(|ui| { ui.label("Please input at least 1 letter")});
+                },
                 Some(matches) => {
                     match matches.len() {
-                        0 => ui.label("No matches found."),
-                        1 => ui.label(format!("Only Match: {}", matches[0])),
+                        0 => {
+                            ui.vertical_centered_justified(|ui| { ui.label("No matches found.")});
+                        },
+                        1 => {
+                            ui.vertical_centered_justified(|ui| { ui.label(format!("Only Match: {}", matches[0]))});
+                        },
                         len => {
                             // Show up to 50 matches
                             let amount = len.min(50);
                             let output = matches[0..amount].join(", ");
-                            ui.label(format!(
-                                "Matches: {}{}",
-                                output,
-                                if len >= 50 { ", ..." } else { "" }
-                            ))
+                            ui.vertical_centered_justified(|ui| {
+                                ui.label(format!(
+                                    "Matches: {}{}",
+                                    output,
+                                    if len >= 50 { ", ..." } else { "" }
+                            ))});
                         }
                     }
                 }
